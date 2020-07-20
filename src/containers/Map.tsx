@@ -12,7 +12,7 @@ import { ViewportState } from "../reducers/mapReducer";
 import { updateViewport } from "../actions/map";
 import { RouteType } from "../model/Journey";
 
-import baseMapStyle from "../map-styles/outdoors.json";
+const MAP_STYLE = "mapbox://styles/mapbox/outdoors-v11";
 
 const SELECTED_ROUTE_COLOUR = "hsl(204, 86%, 53%)";
 const UNSELECTED_ROUTE_COLOUR = "hsl(0, 0%, 48%)";

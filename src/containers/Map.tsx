@@ -89,6 +89,7 @@ const Map: React.FunctionComponent<MapProps & MapDispatchProps> = ({
               "line-join": "round",
               "line-cap": "round"
             }}
+            beforeId="contour-label"
           />
           <Layer
             type="line"
@@ -103,6 +104,7 @@ const Map: React.FunctionComponent<MapProps & MapDispatchProps> = ({
               "line-join": "round",
               "line-cap": "round"
             }}
+            beforeId="contour-label"
           />
         </Source>
       );
@@ -116,7 +118,7 @@ const Map: React.FunctionComponent<MapProps & MapDispatchProps> = ({
       <ReactMapGL
         {...viewport}
         {...dimensions}
-        mapStyle={baseMapStyle}
+        mapStyle={MAP_STYLE}
         onViewportChange={updateViewport}
       >
         {renderMapChildren()}

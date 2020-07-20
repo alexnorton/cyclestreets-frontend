@@ -1,9 +1,8 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import { bindActionCreators, Dispatch } from "redux";
 import { connect } from "react-redux";
 import styled from "styled-components";
-import ReactMapGL from "react-map-gl";
-import Immutable from "immutable";
+import ReactMapGL, { Source, Layer } from "react-map-gl";
 
 import "mapbox-gl/dist/mapbox-gl.css";
 
@@ -61,49 +60,67 @@ const Map: React.FunctionComponent<MapProps & MapDispatchProps> = ({
     };
   }, []);
 
-  const mapStyle = useMemo(() => {
-    if (!journey) return baseMapStyle;
+  const renderMapChildren = () => {
+    if (!journey) return null;
 
-    let style = Immutable.fromJS(baseMapStyle);
+    const children = [];
 
     const notSelectedRoutes = Object.keys(journey.routes).filter(
       routeType => routeType !== selectedRoute
     );
 
     for (const routeType of [...notSelectedRoutes, selectedRoute]) {
-      style = style
-        .setIn(["sources", routeType], {
-          type: "geojson",
-          data: journey.routes[routeType as RouteType].geoJson
-        })
-        .set(
-          "layers",
-          style.get("layers").push({
-            id: routeType,
-            source: routeType,
-            type: "line",
-            paint: {
+      children.push(
+        <Source
+          type="geojson"
+          data={{
+            type: "Feature",
+            geometry: journey.routes[routeType as RouteType].geoJson,
+            properties: {}
+          }}
+        >
+          <Layer
+            type="line"
+            paint={{
+              "line-color": "#ffffff",
+              "line-width": 6
+            }}
+            layout={{
+              "line-join": "round",
+              "line-cap": "round"
+            }}
+          />
+          <Layer
+            type="line"
+            paint={{
               "line-color":
                 routeType === selectedRoute
                   ? SELECTED_ROUTE_COLOUR
                   : UNSELECTED_ROUTE_COLOUR,
-              "line-width": 5
-            }
-          })
-        );
+              "line-width": 3
+            }}
+            layout={{
+              "line-join": "round",
+              "line-cap": "round"
+            }}
+          />
+        </Source>
+      );
     }
 
-    return style;
-  }, [journey, selectedRoute]);
+    return children;
+  };
 
   return (
     <MapContainer>
       <ReactMapGL
         {...viewport}
         {...dimensions}
-        mapStyle={mapStyle}
+        mapStyle={baseMapStyle}
         onViewportChange={updateViewport}
-      />
+      >
+        {renderMapChildren()}
+      </ReactMapGL>
     </MapContainer>
   );
 };
@@ -116,7 +133,4 @@ const mapStateToProps = ({
 const mapDispatchToProps = (dispatch: Dispatch): MapDispatchProps =>
   bindActionCreators({ updateViewport }, dispatch);
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(Map);
+export default connect(mapStateToProps, mapDispatchToProps)(Map);

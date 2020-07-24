@@ -2,14 +2,14 @@ import React, { useState, useEffect } from "react";
 import { bindActionCreators, Dispatch } from "redux";
 import { connect } from "react-redux";
 import styled from "styled-components";
-import ReactMapGL, { Source, Layer } from "react-map-gl";
+import ReactMapGL, { Source, Layer, PointerEvent } from "react-map-gl";
 
 import "mapbox-gl/dist/mapbox-gl.css";
 
 import { JourneyState } from "../reducers/journeyReducer";
 import { StoreState } from "../reducers/rootReducer";
 import { ViewportState } from "../reducers/mapReducer";
-import { updateViewport } from "../actions/map";
+import { updateViewport, updateSelectedRoute } from "../actions/map";
 import { RouteType } from "../model/Journey";
 
 const MAP_STYLE = "mapbox://styles/mapbox/outdoors-v11";
@@ -36,12 +36,14 @@ export interface MapProps {
 
 export interface MapDispatchProps {
   updateViewport: typeof updateViewport;
+  updateSelectedRoute: typeof updateSelectedRoute;
 }
 
 const Map: React.FunctionComponent<MapProps & MapDispatchProps> = ({
   journey: { journey },
   viewport,
   updateViewport,
+  updateSelectedRoute,
   selectedRoute
 }) => {
   const [dimensions, setDimensions] = useState(initialDimensions);
@@ -60,18 +62,40 @@ const Map: React.FunctionComponent<MapProps & MapDispatchProps> = ({
     };
   }, []);
 
-  const renderMapChildren = () => {
-    if (!journey) return null;
+  const mapChildren: React.ReactNode[] = [];
+  const interactiveLayerIds: string[] = [];
 
-    const children = [];
+  if (journey) {
+    ["unselectedRoutePlaceholder", "selectedRoutePlaceholder"].forEach(id => {
+      mapChildren.push(
+        <Layer
+          key={id}
+          id={id}
+          type="background"
+          layout={{ visibility: "none" }}
+          paint={{}}
+          beforeId="contour-label"
+        />
+      );
+    });
 
     const notSelectedRoutes = Object.keys(journey.routes).filter(
       routeType => routeType !== selectedRoute
     );
 
-    for (const routeType of [...notSelectedRoutes, selectedRoute]) {
-      children.push(
+    for (const routeType of [selectedRoute, ...notSelectedRoutes]) {
+      interactiveLayerIds.push(routeType);
+
+      const fillId = `${routeType}-fill`;
+
+      const beforeId =
+        routeType === selectedRoute
+          ? "selectedRoutePlaceholder"
+          : "unselectedRoutePlaceholder";
+
+      mapChildren.push(
         <Source
+          key={routeType}
           type="geojson"
           data={{
             type: "Feature",
@@ -80,37 +104,47 @@ const Map: React.FunctionComponent<MapProps & MapDispatchProps> = ({
           }}
         >
           <Layer
+            id={routeType}
             type="line"
             paint={{
-              "line-color": "#ffffff",
-              "line-width": 6
+              "line-width": 6,
+              "line-color": "#ffffff"
             }}
             layout={{
               "line-join": "round",
               "line-cap": "round"
             }}
-            beforeId="contour-label"
+            beforeId={beforeId}
           />
           <Layer
+            id={fillId}
             type="line"
             paint={{
+              "line-width": 3,
               "line-color":
                 routeType === selectedRoute
                   ? SELECTED_ROUTE_COLOUR
                   : UNSELECTED_ROUTE_COLOUR,
-              "line-width": 3
+              "line-color-transition": {
+                duration: 0
+              }
             }}
             layout={{
               "line-join": "round",
               "line-cap": "round"
             }}
-            beforeId="contour-label"
+            beforeId={beforeId}
           />
         </Source>
       );
     }
+  }
 
-    return children;
+  const handleClick = ({ features }: PointerEvent) => {
+    if (features.length === 0) return;
+
+    const route = features[0].layer.id as RouteType;
+    updateSelectedRoute(route);
   };
 
   return (
@@ -120,8 +154,10 @@ const Map: React.FunctionComponent<MapProps & MapDispatchProps> = ({
         {...dimensions}
         mapStyle={MAP_STYLE}
         onViewportChange={updateViewport}
+        interactiveLayerIds={interactiveLayerIds}
+        onNativeClick={handleClick}
       >
-        {renderMapChildren()}
+        {mapChildren}
       </ReactMapGL>
     </MapContainer>
   );
@@ -133,6 +169,6 @@ const mapStateToProps = ({
 }: StoreState): MapProps => ({ journey, viewport, selectedRoute });
 
 const mapDispatchToProps = (dispatch: Dispatch): MapDispatchProps =>
-  bindActionCreators({ updateViewport }, dispatch);
+  bindActionCreators({ updateViewport, updateSelectedRoute }, dispatch);
 
 export default connect(mapStateToProps, mapDispatchToProps)(Map);

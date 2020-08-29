@@ -1,3 +1,5 @@
+import { FeatureCollection, Point } from "geojson";
+
 export type PlanType = "balanced" | "fastest" | "quietest";
 
 interface RouteMarker {
@@ -70,18 +72,11 @@ export interface JourneyResponse {
   waypoint: Waypoint[];
 }
 
-export interface GeocodeResponse {
-  type: "FeatureCollection";
-  features: {
-    type: "Feature";
-    geometry: {
-      type: "Point";
-      coordinates: [number, number];
-    };
-    properties: {
-      bbox: string;
-      name: string;
-      near: string;
-    };
-  }[];
-}
+export type GeocodeResponse = FeatureCollection<
+  Point,
+  {
+    bbox: string;
+    name: string;
+    near: string;
+  }
+>;

@@ -7,6 +7,10 @@ const GlobalStyle = createGlobalStyle`
     height: 100%;
     margin: 0;
   }
+
+  #root {
+    display: flex;
+  }
 `;
 
 export default GlobalStyle;

@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { bindActionCreators, Dispatch } from "redux";
 import { connect } from "react-redux";
 import styled from "styled-components";
 import ReactMapGL, { Source, Layer, PointerEvent } from "react-map-gl";
+import useResizeObserver from "use-resize-observer";
 
 import "mapbox-gl/dist/mapbox-gl.css";
 
@@ -18,15 +19,10 @@ const SELECTED_ROUTE_COLOUR = "hsl(204, 86%, 53%)";
 const UNSELECTED_ROUTE_COLOUR = "hsl(0, 0%, 48%)";
 
 const MapContainer = styled.div`
-  position: absolute;
   height: 100%;
   width: 100%;
+  flex-grow: 1;
 `;
-
-const initialDimensions = {
-  width: window.innerWidth,
-  height: window.innerHeight
-};
 
 export interface MapProps {
   journey: JourneyState;
@@ -46,21 +42,7 @@ const Map: React.FunctionComponent<MapProps & MapDispatchProps> = ({
   updateSelectedRoute,
   selectedRoute
 }) => {
-  const [dimensions, setDimensions] = useState(initialDimensions);
-
-  const resizeHandler = () => {
-    setDimensions({
-      width: window.innerWidth,
-      height: window.innerHeight
-    });
-  };
-
-  useEffect(() => {
-    window.addEventListener("resize", resizeHandler);
-    return () => {
-      window.removeEventListener("resize", resizeHandler);
-    };
-  }, []);
+  const { ref, width = 1, height = 1 } = useResizeObserver<HTMLDivElement>();
 
   const mapChildren: React.ReactNode[] = [];
   const interactiveLayerIds: string[] = [];
@@ -148,10 +130,11 @@ const Map: React.FunctionComponent<MapProps & MapDispatchProps> = ({
   };
 
   return (
-    <MapContainer>
+    <MapContainer ref={ref}>
       <ReactMapGL
         {...viewport}
-        {...dimensions}
+        width={width}
+        height={height}
         mapStyle={MAP_STYLE}
         onViewportChange={updateViewport}
         interactiveLayerIds={interactiveLayerIds}

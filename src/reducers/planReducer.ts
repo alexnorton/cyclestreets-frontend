@@ -44,7 +44,8 @@ const planReducer = (
           ...state.waypoints.slice(0, waypointIndex),
           {
             ...state.waypoints[waypointIndex],
-            inputValue: action.value
+            inputValue: action.value,
+            selection: null
           },
           ...state.waypoints.slice(waypointIndex + 1)
         ]

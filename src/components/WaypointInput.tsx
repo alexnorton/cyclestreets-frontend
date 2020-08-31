@@ -1,29 +1,45 @@
 import React from "react";
-import Downshift from "downshift";
+import Downshift, { DownshiftProps, DownshiftInterface } from "downshift";
 import classNames from "classnames";
 
 import { Option } from "../model/Option";
 
 interface WaypointInputProps {
   index: number;
-  value: string;
+  inputValue: string;
+  selectedItem: Option | null;
   onInputChange: { (value: string): any };
   onSelectionChange: { (selection: Option): any };
   options?: Option[];
 }
 
+const TypedDownshift = Downshift as DownshiftInterface<Option>;
+type TypedDownshiftProps = DownshiftProps<Option>;
+
 const WaypointInput: React.FunctionComponent<WaypointInputProps> = ({
-  value,
+  inputValue,
+  selectedItem,
   options = [],
   onInputChange,
   onSelectionChange
 }) => {
+  const handleStateChange: TypedDownshiftProps["onStateChange"] = ({
+    type,
+    highlightedIndex,
+    inputValue
+  }) => {
+    if (typeof highlightedIndex === "number")
+      onSelectionChange(options[highlightedIndex]);
+    else if (type === TypedDownshift.stateChangeTypes.changeInput && inputValue)
+      onInputChange(inputValue);
+  };
+
   return (
-    <Downshift
+    <TypedDownshift
       itemToString={item => (item ? item.name : "")}
-      onInputValueChange={onInputChange}
-      onChange={onSelectionChange}
-      initialInputValue={value}
+      onStateChange={handleStateChange}
+      selectedItem={selectedItem}
+      inputValue={selectedItem ? selectedItem.name : inputValue}
     >
       {({
         getInputProps,
@@ -64,7 +80,7 @@ const WaypointInput: React.FunctionComponent<WaypointInputProps> = ({
           </div>
         </div>
       )}
-    </Downshift>
+    </TypedDownshift>
   );
 };
 

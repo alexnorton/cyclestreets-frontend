@@ -1,17 +1,17 @@
-import React from 'react';
-import { bindActionCreators, Dispatch } from 'redux';
-import { connect } from 'react-redux';
-import classNames from 'classnames';
-import { StoreState } from '../reducers/rootReducer';
-import { Waypoint } from '../model/Waypoint';
-import { Option } from '../model/Option';
+import React from "react";
+import { bindActionCreators, Dispatch } from "redux";
+import { connect } from "react-redux";
+import classNames from "classnames";
+import { StoreState } from "../reducers/rootReducer";
+import { Waypoint } from "../model/Waypoint";
+import { Option } from "../model/Option";
 import {
   updateWaypointInputValue,
   updateWaypointSelection,
-  geocode,
-} from '../actions/plan';
-import WaypointInput from '../components/WaypointInput';
-import { getNewJourney } from '../actions/journey';
+  geocode
+} from "../actions/plan";
+import WaypointInput from "../components/WaypointInput";
+import { getNewJourney } from "../actions/journey";
 
 interface PaneProps {
   waypoints: Waypoint[];
@@ -31,7 +31,7 @@ const Pane: React.FunctionComponent<PaneProps & PaneDispatchProps> = ({
   updateWaypointSelection,
   geocode,
   getNewJourney,
-  journeyIsLoading,
+  journeyIsLoading
 }) => {
   const getInputChangeHandler = (id: string) => (value: string) => {
     geocode(value, id);
@@ -45,11 +45,12 @@ const Pane: React.FunctionComponent<PaneProps & PaneDispatchProps> = ({
 
   return (
     <div className="content">
-      {waypoints.map(({ id, inputValue, options }, index) => (
+      {waypoints.map(({ id, inputValue, options, selection }, index) => (
         <WaypointInput
           key={id}
           index={index}
-          value={inputValue}
+          inputValue={inputValue}
+          selectedItem={selection}
           onInputChange={getInputChangeHandler(id)}
           onSelectionChange={getSelectionChangeHandler(id)}
           options={options}
@@ -57,8 +58,8 @@ const Pane: React.FunctionComponent<PaneProps & PaneDispatchProps> = ({
       ))}
       <div className="field is-grouped is-grouped-right">
         <button
-          className={classNames('button is-link', {
-            'is-loading': journeyIsLoading,
+          className={classNames("button is-link", {
+            "is-loading": journeyIsLoading
           })}
           disabled={isMissingSelections || journeyIsLoading}
           onClick={() => {
@@ -75,10 +76,10 @@ const Pane: React.FunctionComponent<PaneProps & PaneDispatchProps> = ({
 
 const mapStateToProps = ({
   plan: { waypoints },
-  journey: { isLoading: journeyIsLoading },
+  journey: { isLoading: journeyIsLoading }
 }: StoreState): PaneProps => ({
   waypoints,
-  journeyIsLoading,
+  journeyIsLoading
 });
 
 const mapDispatchToProps = (dispatch: Dispatch): PaneDispatchProps =>
@@ -87,12 +88,9 @@ const mapDispatchToProps = (dispatch: Dispatch): PaneDispatchProps =>
       updateWaypointInputValue,
       updateWaypointSelection,
       geocode,
-      getNewJourney,
+      getNewJourney
     },
     dispatch
   );
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(Pane);
+export default connect(mapStateToProps, mapDispatchToProps)(Pane);
